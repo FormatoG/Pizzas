@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -414,7 +413,7 @@
         );
       }
       
-      function CheckoutView({ cart, updateCart, onBack }) {
+      function CheckoutView({ cart, updateCart, onBack, clearCart }) {
         const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' or 'pickup'
         const [address, setAddress] = useState('');
         const [customerName, setCustomerName] = useState('');
@@ -465,6 +464,12 @@
 
           const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
           window.open(whatsappUrl, '_blank');
+
+          clearCart();
+          setAddress('');
+          setCustomerName('');
+          setPhone('');
+          setDeliveryMethod('delivery');
         };
 
 
@@ -603,10 +608,7 @@
         };
 
         return (
-          <nav 
-            className="fixed bottom-0 left-0 right-0 bg-brand-card shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-            >
+          <nav className="fixed bottom-0 left-0 right-0 bg-brand-card shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30">
             <div className="flex justify-around max-w-4xl mx-auto">
               {navItems.map(({ id, label, icon }) => (
                 <button
@@ -674,6 +676,10 @@
           }));
         }, []);
         
+        const clearCart = useCallback(() => {
+          setCart({});
+        }, []);
+
         const handleSelectCategory = useCallback((category) => {
           setSelectedCategory(category);
           setView('menu');
@@ -684,7 +690,7 @@
         const renderView = () => {
           switch (view) {
             case 'checkout':
-              return <CheckoutView cart={cart} updateCart={updateCart} onBack={() => setView('menu')} />;
+              return <CheckoutView cart={cart} updateCart={updateCart} onBack={() => setView('menu')} clearCart={clearCart} />;
             case 'about':
               return <AboutPage onBack={() => setView('menu')} />;
             case 'menu':
@@ -703,7 +709,7 @@
         return (
           <div className="min-h-screen">
             <Header />
-            <main style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
+            <main className="pb-24">
               {renderView()}
             </main>
             <ItemDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} onAddToCart={addToCart} />
