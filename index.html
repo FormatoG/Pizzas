@@ -1,0 +1,721 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-t-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FBB040">
+    <title>La Escapadita - Pergamino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-bg': '#EAD9BB',
+              'brand-header': '#FBB040',
+              'brand-card': '#F5EFE6',
+              'brand-text': '#4A2C2A',
+              'brand-text-light': '#6D4C41',
+              'brand-accent': '#BF5700',
+            },
+            animation: {
+              'fade-in-up': 'fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
+              'fade-in': 'fade-in 0.3s ease-out both',
+            },
+            keyframes: {
+              'fade-in-up': {
+                '0%': { 
+                  opacity: '0', 
+                  transform: 'translateY(20px) scale(0.95)' 
+                },
+                '100%': { 
+                  opacity: '1', 
+                  transform: 'translateY(0) scale(1)' 
+                },
+              },
+              'fade-in': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      .font-display {
+        font-family: 'Poppins', sans-serif;
+      }
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+    <!-- React and Babel for in-browser transpilation -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-brand-bg text-brand-text">
+    <div id="root"></div>
+    <script type="text/babel">
+      // React Hooks
+      const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+      // --- HELPERS ---
+      const formatPrice = (price) => {
+        return new Intl.NumberFormat('es-AR', {
+          style: 'currency',
+          currency: 'ARS',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(price);
+      };
+
+      const SHIPPING_COST = 1000;
+      const WHATSAPP_NUMBER = '5492477238364';
+
+      // --- DATA ---
+      const Category = {
+        Todos: 'Todos',
+        Promos: 'Promos',
+        Pizzas: 'Pizzas',
+        Hamburguesas: 'Hamburguesas',
+        Empanadas: 'Empanadas',
+        Sanguches: 'Sánguches',
+        Bebidas: 'Bebidas',
+      };
+
+      const categoryImages = {
+        [Category.Todos]: 'https://i0.wp.com/travelandleisure-es.com/wp-content/uploads/2024/02/portada-pizza-pixabay-scaled.jpg',
+        [Category.Promos]: 'https://thumbs.dreamstime.com/b/pizza-y-hamburguesa-con-fondo-negro-vista-superior-foto-de-alta-calidad-187909343.jpg',
+        [Category.Pizzas]: 'https://dieguitoushuaia.com/wp-content/uploads/2020/09/muzzarella.jpg',
+        [Category.Hamburguesas]: 'https://jetextramar.com/wp-content/uploads/2021/07/congelados-receta-hamburguesa-de-pollo-1024x768.jpg',
+        [Category.Empanadas]: 'https://www.cucinare.tv/wp-content/uploads/2021/09/Empanadas-fritas-o-al-horno.jpg',
+        [Category.Sanguches]: 'https://www.tafiviejo.gob.ar/fotos/cache/notas/2024/10/08/830x465_241008004008_43152.jpg',
+        [Category.Bebidas]: 'https://latorrepizza.com.ar/wp-content/uploads/2023/03/B-GASEOSAS-min.jpg',
+      };
+
+      const menuItems = [
+        // Pizzas
+        { id: 1, name: 'Pizza Mozzarella', category: Category.Pizzas, description: 'La clásica pizza con abundante mozzarella y salsa de tomate casera.', price: 100, ingredients: ['Masa de pizza', 'Salsa de tomate', 'Queso mozzarella', 'Aceitunas verdes', 'Orégano'], prepTime: '20-25 min', imageUrls: ['https://dieguitoushuaia.com/wp-content/uploads/2020/09/muzzarella.jpg']},
+        { id: 2, name: 'Pizza Napolitana', category: Category.Pizzas, description: 'Mozzarella, rodajas de tomate fresco y un toque de ajo y albahaca.', price: 100, ingredients: ['Masa de pizza', 'Salsa de tomate', 'Queso mozzarella', 'Tomate fresco', 'Ajo', 'Albahaca', 'Aceitunas'], prepTime: '20-25 min', imageUrls: ['https://media.elgourmet.com/article/8metlvp345_portada-pizza.jpg']},
+        { id: 3, name: 'Pizza Fugazzeta', category: Category.Pizzas, description: 'Una delicia para los amantes de la cebolla, con mozzarella y un toque de aceite de oliva.', price: 100, ingredients: ['Masa de pizza', 'Queso mozzarella', 'Cebolla blanca', 'Aceite de oliva', 'Orégano'], prepTime: '25-30 min', imageUrls: ['https://tofuu.getjusto.com/orioneat-local/resized2/8BmmxWrSsXHMr9Kpk-300-x.webp']},
+        { id: 4, name: 'Pizza Calabresa', category: Category.Pizzas, description: 'Sabor intenso con longaniza calabresa, mozzarella y ají molido.', price: 100, ingredients: ['Masa de pizza', 'Salsa de tomate', 'Queso mozzarella', 'Longaniza calabresa', 'Ají molido', 'Aceitunas negras'], prepTime: '25-30 min', imageUrls: ['https://speedy.uenicdn.com/4c6d58bf-c626-4ade-85a5-5390e842a41a/c440_a/image/upload/v1612909110/business/f919def1-92cc-4aaa-906d-07447acb469b.jpg']},
+        // Hamburguesas
+        { id: 5, name: 'Hamburguesa Clásica', category: Category.Hamburguesas, description: 'Carne de primera, lechuga, tomate y nuestra salsa especial en pan brioche.', price: 100, ingredients: ['Carne de res', 'Pan brioche', 'Lechuga', 'Tomate', 'Cebolla', 'Salsa especial'], prepTime: '15-20 min', imageUrls: ['https://jetextramar.com/wp-content/uploads/2021/07/congelados-receta-hamburguesa-de-pollo-1024x768.jpg']},
+        { id: 6, name: 'Hamburguesa Doble Cheddar', category: Category.Hamburguesas, description: 'Doble medallón de carne, doble porción de queso cheddar y panceta crujiente.', price: 100, ingredients: ['Doble carne de res', 'Pan brioche', 'Queso cheddar', 'Panceta', 'Pepinillos'], prepTime: '15-20 min', imageUrls: ['https://media-cdn.tripadvisor.com/media/photo-s/1c/c7/15/d1/holy-cheese-doble-hamburguesa.jpg']},
+        { id: 7, name: 'Hamburguesa Criolla', category: Category.Hamburguesas, description: 'Con provoleta grillada, morrones asados y salsa criolla.', price: 100, ingredients: ['Carne de res', 'Pan rústico', 'Queso provoleta', 'Morrones asados', 'Huevo frito', 'Salsa criolla'], prepTime: '20-25 min', imageUrls: ['https://i.pinimg.com/1200x/03/82/15/0382153476c9ca4d2b7dfe4b69032bf7.jpg']},
+        { id: 8, name: 'Hamburguesa Veggie', category: Category.Hamburguesas, description: 'Medallón de lentejas y champiñones, con rúcula, tomate y mayonesa de palta.', price: 100, ingredients: ['Medallón de lentejas', 'Pan integral', 'Rúcula', 'Tomate', 'Mayonesa de palta', 'Cebolla morada'], prepTime: '15-20 min', imageUrls: ['https://www.conasi.eu/blog/wp-content/uploads/2022/05/hamburguesa-vegana-1.jpg']},
+        // Empanadas
+        { id: 9, name: 'Empanada de Carne Suave', category: Category.Empanadas, description: 'Relleno jugoso de carne cortada a cuchillo, con cebolla, huevo y aceitunas.', price: 100, ingredients: ['Carne de res', 'Cebolla', 'Huevo duro', 'Aceitunas', 'Comino'], prepTime: '10-15 min', imageUrls: ['https://www.cucinare.tv/wp-content/uploads/2021/09/Empanadas-fritas-o-al-horno.jpg']},
+        { id: 10, name: 'Empanada de Jamón y Queso', category: Category.Empanadas, description: 'La combinación perfecta de jamón cocido y mozzarella derretida.', price: 100, ingredients: ['Jamón cocido', 'Queso mozzarella', 'Masa de hojaldre'], prepTime: '10-15 min', imageUrls: ['https://www.clarin.com/img/2021/04/12/WYz8Yr8tB_1256x620__1.jpg']},
+        { id: 11, name: 'Empanada de Pollo', category: Category.Empanadas, description: 'Pollo desmenuzado en una salsa cremosa con pimientos y cebolla.', price: 100, ingredients: ['Pollo', 'Cebolla', 'Pimiento rojo', 'Salsa blanca', 'Especias'], prepTime: '10-15 min', imageUrls: ['https://img.youtube.com/vi/mjiA5-g-Tw0/hqdefault.jpg']},
+        { id: 12, name: 'Empanada de Humita', category: Category.Empanadas, description: 'Dulce y cremosa, con choclo, zapallo y queso.', price: 100, ingredients: ['Choclo', 'Zapallo', 'Queso cremoso', 'Cebolla de verdeo', 'Albahaca'], prepTime: '10-15 min', imageUrls: ['https://elsabroso.com.ar/wp-content/uploads/2024/12/empanada-humita.webp']},
+        // Promos
+        { id: 13, name: 'Promo Pizza para 5 Personas', category: Category.Promos, description: 'Ideal para compartir. Incluye 2 pizzas de muzzarella, 1 pizza especial, gaseosa grande y postre.', price: 100, ingredients: ['2 Pizzas grandes muzzarella (8 porciones c/u)', '1 Pizza especial (jamón y morrones o fugazzeta rellena)', '1 gaseosa de 1.5L o 2L', '1 postre helado chico (500g) o flan casero x5'], prepTime: '30-40 min', imageUrls: ['https://images.pexels.com/photos/905847/pexels-photo-905847.jpeg']},
+        { id: 14, name: 'Promo Empanadas para 4', category: Category.Promos, description: 'Un combo de 24 empanadas surtidas con nuestras salsitas caseras y una gaseosa grande para acompañar.', price: 100, ingredients: ['24 empanadas surtidas (carne, pollo, jamón y queso, verdura)', '4 salsitas caseras (ají, chimichurri, criolla, etc.)', '1 gaseosa de 1.5L'], prepTime: '20-25 min', imageUrls: ['https://cuk-it.com/wp-content/uploads/2024/05/empanadas-carne-cuchillo-thumb-200x200.webp']},
+        { id: 15, name: 'Promo Pizza y Hamburguesas', category: Category.Promos, description: 'La combinación perfecta: 2 pizzas grandes y 4 hamburguesas completas con papas y gaseosa.', price: 100, ingredients: ['2 Pizzas grandes (1 muzzarella + 1 especial a elección)', '4 Hamburguesas completas', '1 porción de papas grandes o 2 medianas', '1 gaseosa de 2L'], prepTime: '30-40 min', imageUrls: ['https://thumbs.dreamstime.com/b/pizza-y-hamburguesa-con-fondo-negro-vista-superior-foto-de-alta-calidad-187909343.jpg']},
+        { id: 16, name: 'Mega Promo 5 Hamburguesas', category: Category.Promos, description: '¡Un festín! 5 hamburguesas completas con papas fritas, salsas y gaseosa para compartir.', price: 100, ingredients: ['5 Hamburguesas completas', '2 porciones grandes de papas fritas', '5 salsas individuales', '1 gaseosa de 2L'], prepTime: '25-30 min', imageUrls: ['https://img-global.cpcdn.com/recipes/90033ff6a172548a/640x640sq80/photo.webp']},
+        // Sánguches
+        { id: 17, name: 'Sánguche de Milanesa Completo', category: Category.Sanguches, description: 'Milanesa de ternera, lechuga, tomate, jamón, queso y huevo frito en pan francés.', price: 100, ingredients: ['Pan francés', 'Milanesa de ternera', 'Lechuga', 'Tomate', 'Jamón', 'Queso', 'Huevo frito'], prepTime: '15-20 min', imageUrls: ['https://www.tafiviejo.gob.ar/fotos/cache/notas/2024/10/08/830x465_241008004008_43152.jpg']},
+        { id: 18, name: 'Sánguche de Lomito', category: Category.Sanguches, description: 'Bife de lomo tierno, lechuga, tomate, jamón, queso, huevo y mayonesa casera.', price: 100, ingredients: ['Pan árabe', 'Bife de lomo', 'Lechuga', 'Tomate', 'Jamón', 'Queso', 'Huevo frito', 'Mayonesa'], prepTime: '15-20 min', imageUrls: ['https://www.clarin.com/img/2021/07/19/hgA-CEG32_1256x620__2.jpg']},
+        { id: 19, name: 'Triple Tostado', category: Category.Sanguches, description: 'Un clásico sándwich de tres capas con jamón, queso, lechuga y tomate, perfectamente tostado.', price: 100, ingredients: ['Pan de miga triple', 'Jamón cocido', 'Queso de máquina', 'Lechuga', 'Tomate'], prepTime: '10-15 min', imageUrls: ['https://img-global.cpcdn.com/recipes/59296a703611b07c/300x426cq80/sandwich-triple-de-jamon-y-queso-foto-principal.webp']},
+        // Bebidas
+        { id: 25, name: 'Gaseosa Línea Coca-Cola', category: Category.Bebidas, description: 'Lata de 354ml. Elige entre Coca-Cola Original, Sin Azúcar o Light.', price: 100, ingredients: [], prepTime: 'N/A', imageUrls: ['https://latorrepizza.com.ar/wp-content/uploads/2023/03/B-GASEOSAS-min.jpg']},
+        { id: 26, name: 'Agua Saborizada', category: Category.Bebidas, description: 'Botella de 500ml. Sabores: Manzana, Naranja, Pomelo.', price: 100, ingredients: [], prepTime: 'N/A', imageUrls: ['https://acdn.mitiendanube.com/stores/001/157/846/products/levitess-4e72e9073979c1786317062059644811-480-0.webp']},
+        { id: 27, name: 'Cerveza Quilmes Clásica', category: Category.Bebidas, description: 'Lata de 473ml de la cerveza más popular de Argentina.', price: 100, ingredients: [], prepTime: 'N/A', imageUrls: ['https://shop.gustoargentino.com/cdn/shop/files/cerveza-quilmes.png?v=1741175524&width=640']},
+        { id: 28, name: 'Vino Malbec (Copa)', category: Category.Bebidas, description: 'Una copa de nuestro Malbec de la casa, intenso y frutado.', price: 100, ingredients: [], prepTime: 'N/A', imageUrls: ['https://static.wixstatic.com/media/fe24ac_b2fe3b0b1fb84203891261b4fe4615b6~mv2.webp']},
+      ];
+
+      const itemsById = menuItems.reduce((acc, item) => {
+        acc[item.id] = item;
+        return acc;
+      }, {});
+
+      // --- ICONS ---
+      const GridIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>);
+      const InfoIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+      const CartIcon = ({count}) => (
+        <div className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          {count > 0 && (
+            <span className="absolute -top-2 -right-2 bg-brand-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{count}</span>
+          )}
+        </div>
+      );
+      const WhatsAppIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="h-5 w-5 mr-2" fill="currentColor"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.8 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>;
+      const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>;
+      const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>;
+      const MinusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clipRule="evenodd" /></svg>;
+      const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.576l.84-10.518.149.022a.75.75 0 10.23-1.482A41.31 41.31 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" /></svg>;
+
+      // --- COMPONENTS ---
+
+      function Header() {
+        const logoUrl = "https://dn721204.ca.archive.org/0/items/sin-titulo-7-02/Sin%20t%C3%ADtulo-7-02.png";
+        return (
+          <header className="bg-brand-header shadow-md sticky top-0 z-20 flex items-center justify-center h-16">
+            <img src={logoUrl} alt="La Escapadita Logo" className="h-14 w-auto"/>
+          </header>
+        );
+      }
+      
+      function CategoryNav({ selectedCategory, setSelectedCategory }) {
+        const categories = [Category.Todos, Category.Promos, Category.Pizzas, Category.Hamburguesas, Category.Empanadas, Category.Sanguches, Category.Bebidas];
+        const navRef = useRef(null);
+
+        return (
+            <nav ref={navRef} className="p-2 w-full">
+                <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-2">
+                    {categories.map(category => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
+                                selectedCategory === category 
+                                ? 'bg-brand-accent text-white shadow' 
+                                : 'bg-brand-card text-brand-text-light hover:bg-brand-header/50'
+                            }`}
+                        >
+                            {category}
+                        </button>
+                    ))}
+                </div>
+            </nav>
+        );
+      }
+      
+      function MenuItemCard({ item, onSelect, onAdd }) {
+        return (
+          <div className="bg-brand-card rounded-lg shadow-md overflow-hidden flex flex-col animate-fade-in-up">
+            <img src={item.imageUrls[0]} alt={item.name} className="w-full h-40 object-cover cursor-pointer" onClick={() => onSelect(item)} />
+            <div className="p-4 flex flex-col flex-grow">
+              <h3 className="text-lg font-bold text-brand-text flex-grow">{item.name}</h3>
+              <p className="text-brand-text-light text-sm mb-2 font-light">{item.description}</p>
+              <div className="flex justify-between items-center mt-auto pt-2">
+                <span className="text-xl font-bold text-brand-accent">{formatPrice(item.price)}</span>
+                <button onClick={() => onAdd(item)} className="bg-brand-accent text-white px-4 py-2 rounded-full font-semibold hover:bg-opacity-80 transition-transform transform hover:scale-105">
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function AddToCartModal({ item, onClose, onConfirm }) {
+          const [quantity, setQuantity] = useState(1);
+
+          useEffect(() => {
+              if (item) {
+                  setQuantity(1);
+              }
+          }, [item]);
+
+          if (!item) return null;
+
+          const handleConfirm = () => {
+            onConfirm(item.id, quantity);
+            onClose();
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center animate-fade-in p-4" onClick={onClose}>
+              <div className="bg-brand-card rounded-lg shadow-xl w-full max-w-sm p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-semibold text-brand-text mb-2 text-center">Vas a agregar al carrito</h2>
+                <p className="text-2xl font-bold font-display text-brand-accent text-center mb-4">{item.name}</p>
+
+                <div className="flex items-center justify-center space-x-4 my-6">
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="bg-white rounded-full p-3 text-brand-accent shadow-md hover:bg-gray-100 transition-colors"><MinusIcon /></button>
+                    <span className="text-2xl font-bold w-10 text-center tabular-nums">{quantity}</span>
+                    <button onClick={() => setQuantity(q => q + 1)} className="bg-white rounded-full p-3 text-brand-accent shadow-md hover:bg-gray-100 transition-colors"><PlusIcon /></button>
+                </div>
+                
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-lg font-semibold text-brand-text">Total:</span>
+                  <span className="text-2xl font-bold text-brand-accent">{formatPrice(item.price * quantity)}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                      onClick={onClose} 
+                      className="w-full bg-gray-200 text-brand-text py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                      aria-label="Cancelar y volver al menú"
+                  >
+                    Atrás
+                  </button>
+                  <button 
+                      onClick={handleConfirm} 
+                      className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-transform transform hover:scale-105"
+                      aria-label={`Confirmar y agregar ${quantity} ${item.name} al carrito`}
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+      }
+
+      function ItemDetailModal({ item, onClose, onAddToCart }) {
+        const [quantity, setQuantity] = useState(1);
+
+        useEffect(() => {
+            if (item) {
+                setQuantity(1);
+            }
+        }, [item]);
+
+        if (!item) return null;
+
+        const handleAddToCart = () => {
+          onAddToCart(item.id, quantity);
+          onClose();
+        };
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center animate-fade-in" onClick={onClose}>
+            <div className="bg-brand-card rounded-lg shadow-xl w-11/12 max-w-lg max-h-[90vh] overflow-y-auto animate-fade-in-up relative" onClick={e => e.stopPropagation()}>
+              <button onClick={onClose} className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 text-brand-text shadow-md hover:bg-white transition-transform transform hover:scale-110" aria-label="Volver al menú">
+                  <ChevronLeftIcon />
+              </button>
+              <img src={item.imageUrls[0]} alt={item.name} className="w-full h-64 object-cover" />
+              <div className="p-6">
+                <h2 className="text-3xl font-bold font-display text-brand-text mb-2">{item.name}</h2>
+                <p className="text-brand-text-light mb-4">{item.description}</p>
+                {item.ingredients && item.ingredients.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-brand-text">Ingredientes:</h4>
+                    <p className="text-brand-text-light text-sm">{item.ingredients.join(', ')}</p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between mb-6">
+                    <span className="text-2xl font-bold text-brand-accent">{formatPrice(item.price * quantity)}</span>
+                    <div className="flex items-center space-x-3 bg-white/50 rounded-full p-1">
+                        <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="bg-brand-card rounded-full p-2 text-brand-accent"><MinusIcon /></button>
+                        <span className="text-xl font-bold w-8 text-center">{quantity}</span>
+                        <button onClick={() => setQuantity(q => q + 1)} className="bg-brand-card rounded-full p-2 text-brand-accent"><PlusIcon /></button>
+                    </div>
+                </div>
+                <button onClick={handleAddToCart} className="w-full bg-brand-accent text-white py-3 rounded-lg font-semibold text-lg hover:bg-opacity-90 transition-all transform hover:scale-105">
+                  Agregar al Carrito
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function CategoriesPage({ onSelectCategory }) {
+          const categories = [Category.Todos, Category.Promos, Category.Pizzas, Category.Hamburguesas, Category.Empanadas, Category.Sanguches, Category.Bebidas];
+
+          return (
+              <div className="p-4 animate-fade-in-up">
+                  <h2 className="text-3xl font-bold font-display text-brand-text mb-6">Categorías</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {categories.map(category => (
+                          <div key={category} onClick={() => onSelectCategory(category)} className="relative rounded-lg overflow-hidden shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-300 aspect-square">
+                              <img src={categoryImages[category]} alt={category} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
+                                  <h3 className="text-white text-xl text-center font-bold font-display">{category}</h3>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          );
+      }
+
+      function MenuPage({ onSelectItem, onAdd, selectedCategory, onBack }) {
+        const renderAllItems = () => {
+            const categoryOrder = [Category.Promos, Category.Pizzas, Category.Hamburguesas, Category.Empanadas, Category.Sanguches, Category.Bebidas];
+            
+            return (
+                <div className="p-4 space-y-8">
+                    {categoryOrder.map(category => {
+                        const itemsInCategory = menuItems.filter(item => item.category === category);
+                        if (itemsInCategory.length === 0) return null;
+                        
+                        return (
+                            <section key={category} aria-labelledby={`category-title-${category}`}>
+                                <h2 id={`category-title-${category}`} className="bg-brand-header text-white font-display text-2xl font-bold py-3 px-4 rounded-lg shadow-md mb-6">{category}</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {itemsInCategory.map(item => (
+                                        <MenuItemCard key={item.id} item={item} onSelect={onSelectItem} onAdd={onAdd} />
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    })}
+                </div>
+            );
+        };
+
+        const renderFilteredItems = () => {
+            const filteredItems = menuItems.filter(item => item.category === selectedCategory);
+            return (
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredItems.map(item => (
+                        <MenuItemCard key={item.id} item={item} onSelect={onSelectItem} onAdd={onAdd} />
+                    ))}
+                </div>
+            );
+        };
+
+        return (
+            <div>
+                <div className="bg-brand-accent shadow-md flex items-center text-white">
+                    <button onClick={onBack} className="p-4" aria-label="Volver a categorías">
+                        <ChevronLeftIcon />
+                    </button>
+                    <h2 className="text-xl font-bold font-display text-center flex-grow">{selectedCategory}</h2>
+                    <div className="w-14"></div> {/* Spacer div to balance the back button */}
+                </div>
+                {selectedCategory === Category.Todos ? renderAllItems() : renderFilteredItems()}
+            </div>
+        );
+      }
+      
+      function AboutPage({onBack}) {
+        return (
+           <div className="p-6 animate-fade-in-up">
+                <button onClick={onBack} className="flex items-center text-brand-accent font-semibold mb-4">
+                    <ChevronLeftIcon /> Volver al Menú
+                </button>
+                <div className="bg-brand-card p-6 rounded-lg shadow-md">
+                    <h2 className="text-3xl font-bold font-display text-brand-text mb-4">Sobre Nosotros</h2>
+                    <p className="text-brand-text-light mb-4">
+                        Bienvenidos a <strong>La Escapadita</strong>, tu rincón favorito en Pergamino para disfrutar de la mejor comida casera. Desde 2005, nos dedicamos a preparar pizzas, hamburguesas y empanadas con los ingredientes más frescos y todo el amor que nos caracteriza.
+                    </p>
+                    <p className="text-brand-text-light mb-4">
+                        Nuestro secreto es simple: recetas familiares, productos de calidad y un equipo apasionado por la buena cocina. ¡Gracias por elegirnos!
+                    </p>
+                    <div className="border-t border-brand-bg my-4"></div>
+                    <h3 className="text-xl font-semibold text-brand-text mb-2">Horarios</h3>
+                    <p className="text-brand-text-light">Martes a Domingos: 19:00hs a 23:30hs</p>
+                </div>
+           </div>
+        );
+      }
+      
+      function CheckoutView({ cart, updateCart, onBack }) {
+        const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' or 'pickup'
+        const [address, setAddress] = useState('');
+        const [customerName, setCustomerName] = useState('');
+        const [phone, setPhone] = useState('');
+
+        const cartItems = useMemo(() => {
+            return Object.entries(cart)
+                .map(([id, quantity]) => ({...itemsById[id], quantity }))
+                .filter(item => item.id);
+        }, [cart]);
+
+        const subtotal = useMemo(() => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0), [cartItems]);
+        const total = useMemo(() => subtotal + (deliveryMethod === 'delivery' ? SHIPPING_COST : 0), [subtotal, deliveryMethod]);
+        
+        const handleConfirmOrder = () => {
+          if (deliveryMethod === 'delivery' && !address.trim()) {
+            alert('Por favor, ingresa tu dirección para el envío.');
+            return;
+          }
+           if (!customerName.trim()) {
+            alert('Por favor, ingresa tu nombre.');
+            return;
+          }
+          if (!phone.trim()) {
+            alert('Por favor, ingresa tu número de teléfono.');
+            return;
+          }
+
+          const orderDetails = cartItems.map(item => 
+            `- ${item.quantity} x ${item.name} (${formatPrice(item.price)} c/u) - Total: ${formatPrice(item.price * item.quantity)}`
+          ).join('\n');
+          
+          let message = `*¡Nuevo Pedido desde la App!* 🍔🍕\n\n`;
+          message += `*Cliente:* ${customerName}\n`;
+          message += `*Teléfono:* ${phone}\n\n`;
+          message += `*Resumen del Pedido:*\n${orderDetails}\n\n`;
+          message += `*Subtotal:* ${formatPrice(subtotal)}\n`;
+
+          if (deliveryMethod === 'delivery') {
+            message += `*Método de Entrega:* Enviar a domicilio\n`;
+            message += `*Dirección:* ${address}\n`;
+            message += `*Costo de Envío:* ${formatPrice(SHIPPING_COST)}\n`;
+          } else {
+            message += `*Método de Entrega:* Retirar del local\n`;
+          }
+          
+          message += `\n*TOTAL A PAGAR: ${formatPrice(total)}*`;
+
+          const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+          window.open(whatsappUrl, '_blank');
+        };
+
+
+        if (cartItems.length === 0) {
+            return (
+                <div className="p-6 text-center animate-fade-in-up">
+                    <h2 className="text-2xl font-bold text-brand-text mb-4 font-display">Tu carrito está vacío</h2>
+                    <p className="text-brand-text-light mb-6">Agrega algunos productos para continuar.</p>
+                    <button onClick={onBack} className="bg-brand-accent text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-80 transition-transform transform hover:scale-105">
+                        Ver Menú
+                    </button>
+                </div>
+            )
+        }
+
+        return (
+          <div className="p-4 md:p-6 animate-fade-in-up">
+              <button onClick={onBack} className="flex items-center text-brand-accent font-semibold mb-4">
+                  <ChevronLeftIcon /> Volver al Menú
+              </button>
+              <h2 className="text-3xl font-bold font-display text-brand-text mb-6">Finalizar Compra</h2>
+
+              <div className="bg-brand-card p-4 rounded-lg shadow-md mb-6">
+                <h3 className="font-bold text-lg mb-4">Tu Pedido</h3>
+                {cartItems.map(item => (
+                    <div key={item.id} className="flex items-center justify-between py-3 border-b border-brand-bg last:border-b-0 gap-2">
+                        <div className="flex-grow">
+                            <p className="font-semibold">{item.name}</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                                {/* Quantity controller */}
+                                <div className="flex items-center space-x-2 rounded-full bg-white/50 p-1">
+                                    <button 
+                                        onClick={() => updateCart(item.id, item.quantity - 1)} 
+                                        className="bg-brand-card rounded-full p-1 text-brand-accent"
+                                        aria-label={`Disminuir cantidad de ${item.name}`}
+                                    >
+                                        <MinusIcon />
+                                    </button>
+                                    <span className="font-bold w-6 text-center" aria-live="polite">{item.quantity}</span>
+                                    <button 
+                                        onClick={() => updateCart(item.id, item.quantity + 1)} 
+                                        className="bg-brand-card rounded-full p-1 text-brand-accent"
+                                        aria-label={`Aumentar cantidad de ${item.name}`}
+                                    >
+                                        <PlusIcon />
+                                    </button>
+                                </div>
+                                <p className="text-sm text-brand-text-light">x {formatPrice(item.price)}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                           <span className="font-bold text-brand-accent text-lg">{formatPrice(item.price * item.quantity)}</span>
+                           <button 
+                               onClick={() => updateCart(item.id, 0)} 
+                               className="text-red-500 hover:text-red-700 p-2"
+                               aria-label={`Eliminar ${item.name} del carrito`}
+                           >
+                             <TrashIcon />
+                           </button>
+                        </div>
+                    </div>
+                ))}
+              </div>
+
+              <div className="bg-brand-card p-4 rounded-lg shadow-md mb-6">
+                  <h3 className="font-bold text-lg mb-4">Tu Información</h3>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Tu nombre"
+                    className="w-full p-3 bg-white border border-brand-bg rounded-lg mb-4 focus:ring-2 focus:ring-brand-accent focus:outline-none"
+                    aria-label="Nombre del cliente"
+                  />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Tu número de teléfono"
+                    className="w-full p-3 bg-white border border-brand-bg rounded-lg mb-4 focus:ring-2 focus:ring-brand-accent focus:outline-none"
+                    aria-label="Número de teléfono del cliente"
+                  />
+                  <h3 className="font-bold text-lg mb-2">Método de Entrega</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                      <button onClick={() => setDeliveryMethod('delivery')} className={`p-3 rounded-lg border-2 font-semibold transition-colors ${deliveryMethod === 'delivery' ? 'bg-brand-accent/20 border-brand-accent' : 'bg-white/50 border-gray-300'}`}>
+                          Enviar a domicilio
+                      </button>
+                      <button onClick={() => setDeliveryMethod('pickup')} className={`p-3 rounded-lg border-2 font-semibold transition-colors ${deliveryMethod === 'pickup' ? 'bg-brand-accent/20 border-brand-accent' : 'bg-white/50 border-gray-300'}`}>
+                          Retirar del local
+                      </button>
+                  </div>
+                  {deliveryMethod === 'delivery' && (
+                      <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Tu dirección completa"
+                          className="w-full p-3 bg-white border border-brand-bg rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none"
+                          aria-label="Dirección de envío"
+                      />
+                  )}
+              </div>
+
+              <div className="bg-brand-card p-4 rounded-lg shadow-md mb-6">
+                  <h3 className="font-bold text-lg mb-4">Resumen de Costos</h3>
+                  <div className="space-y-2 text-brand-text-light">
+                      <div className="flex justify-between"><span>Subtotal</span><span className="font-semibold text-brand-text">{formatPrice(subtotal)}</span></div>
+                      {deliveryMethod === 'delivery' && (
+                        <div className="flex justify-between"><span>Envío</span><span className="font-semibold text-brand-text">{formatPrice(SHIPPING_COST)}</span></div>
+                      )}
+                      <div className="flex justify-between text-xl font-bold text-brand-text pt-2 border-t border-brand-bg"><span>Total</span><span>{formatPrice(total)}</span></div>
+                  </div>
+              </div>
+
+              <button onClick={handleConfirmOrder} className="w-full bg-green-500 text-white py-4 rounded-lg font-bold text-lg flex items-center justify-center hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg">
+                <WhatsAppIcon /> Hacer pedido
+              </button>
+          </div>
+        );
+      }
+
+      function BottomNav({ view, setView, cartCount }) {
+        const navItems = [
+          { id: 'categories', label: 'Categorías', icon: <GridIcon /> },
+          { id: 'about', label: 'Nosotros', icon: <InfoIcon /> },
+          { id: 'checkout', label: 'Carrito', icon: <CartIcon count={cartCount} /> },
+        ];
+
+        const handleNavClick = (id) => {
+          if (id === 'categories') {
+            // Toggle between 'categories' page and 'menu' page.
+            setView(currentView => currentView === 'categories' ? 'menu' : 'categories');
+          } else {
+            setView(id);
+          }
+        };
+
+        return (
+          <nav 
+            className="fixed bottom-0 left-0 right-0 bg-brand-card shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
+            <div className="flex justify-around max-w-4xl mx-auto">
+              {navItems.map(({ id, label, icon }) => (
+                <button
+                  key={id}
+                  onClick={() => handleNavClick(id)}
+                  className={`flex flex-col items-center justify-center w-full pt-2 pb-1 transition-colors duration-200 ${
+                    (view === id || (view === 'menu' && id === 'categories')) ? 'text-brand-accent' : 'text-brand-text-light hover:text-brand-accent'
+                  }`}
+                  aria-label={label}
+                >
+                  {icon}
+                  <span className="text-xs font-medium">{label}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        );
+      }
+
+      // --- APP ---
+      function App() {
+        const [view, setView] = useState('menu'); // 'categories', 'menu', 'about', 'checkout'
+        const [cart, setCart] = useState({}); // { itemId: quantity }
+        const [selectedItem, setSelectedItem] = useState(null);
+        const [itemToQuickAdd, setItemToQuickAdd] = useState(null);
+        const [selectedCategory, setSelectedCategory] = useState(Category.Todos);
+
+
+        useEffect(() => {
+          try {
+            const savedCart = localStorage.getItem('laEscapaditaCart');
+            if (savedCart) {
+              setCart(JSON.parse(savedCart));
+            }
+          } catch (error) {
+            console.error("Failed to load cart from localStorage:", error);
+            setCart({});
+          }
+        }, []);
+
+        useEffect(() => {
+            try {
+                localStorage.setItem('laEscapaditaCart', JSON.stringify(cart));
+            } catch (error) {
+                console.error("Failed to save cart to localStorage:", error);
+            }
+        }, [cart]);
+
+        const updateCart = useCallback((itemId, quantity) => {
+          setCart(prevCart => {
+            const newCart = { ...prevCart };
+            if (quantity <= 0) {
+              delete newCart[itemId];
+            } else {
+              newCart[itemId] = quantity;
+            }
+            return newCart;
+          });
+        }, []);
+
+        const addToCart = useCallback((itemId, quantity) => {
+          setCart(prevCart => ({
+            ...prevCart,
+            [itemId]: (prevCart[itemId] || 0) + quantity,
+          }));
+        }, []);
+        
+        const handleSelectCategory = useCallback((category) => {
+          setSelectedCategory(category);
+          setView('menu');
+        }, []);
+
+        const cartCount = useMemo(() => Object.values(cart).reduce((sum, q) => sum + q, 0), [cart]);
+
+        const renderView = () => {
+          switch (view) {
+            case 'checkout':
+              return <CheckoutView cart={cart} updateCart={updateCart} onBack={() => setView('menu')} />;
+            case 'about':
+              return <AboutPage onBack={() => setView('menu')} />;
+            case 'menu':
+              return <MenuPage 
+                        onSelectItem={setSelectedItem} 
+                        onAdd={setItemToQuickAdd}
+                        selectedCategory={selectedCategory}
+                        onBack={() => setView('categories')}
+                      />;
+            case 'categories':
+            default:
+              return <CategoriesPage onSelectCategory={handleSelectCategory} />;
+          }
+        };
+
+        return (
+          <div className="min-h-screen">
+            <Header />
+            <main style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
+              {renderView()}
+            </main>
+            <ItemDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} onAddToCart={addToCart} />
+            <AddToCartModal item={itemToQuickAdd} onClose={() => setItemToQuickAdd(null)} onConfirm={addToCart} />
+            <BottomNav view={view} setView={setView} cartCount={cartCount} />
+          </div>
+        );
+      }
+
+      // --- RENDER ---
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
